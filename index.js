@@ -1,16 +1,18 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
-// صفحة التأكد من عمل النظام
+// 1. SERVE FRONTEND: This sends the HTML file when you visit the main URL
 app.get('/', (req, res) => {
-  res.json({ "status": "Online", "system": "Reddit Checker JS" });
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// مسار فحص الحساب
+// 2. BACKEND API: The logic to check Reddit Karma and Age
 app.get('/check/:username', async (req, res) => {
   const username = req.params.username.replace('u/', '').trim();
   const url = `https://www.reddit.com/user/${username}/about.json`;
