@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Access Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at center, #0d1117 0%, #000000 100%);
+            color: #58a6ff; font-family: 'Orbitron', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0;
+        }
+        .container {
+            background: rgba(22, 27, 34, 0.8);
+            border: 2px solid #1f6feb;
+            box-shadow: 0 0 25px rgba(31, 111, 235, 0.4);
+            padding: 40px; border-radius: 20px;
+            text-align: center; width: 350px;
+        }
+        h2 { color: #58a6ff; text-transform: uppercase; letter-spacing: 2px; }
+        input {
+            width: 100%; padding: 12px; margin: 20px 0;
+            background: #0d1117; border: 1px solid #30363d;
+            border-radius: 8px; color: #c9d1d9; font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: #58a6ff; outline: none; }
+        button {
+            background: #238636; color: white; border: none;
+            padding: 12px 30px; border-radius: 8px; font-weight: bold;
+            cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        button:hover { background: #2ea043; transform: scale(1.02); }
+        button:disabled { background: #161b22; color: #484f58; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 14px; min-height: 20px; }
+        .error { color: #f85149; }
+        .success { color: #3fb950; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Reddit Auth</h2>
+        <p style="font-size: 12px; color: #8b949e;">Verification Required to Access Tasks</p>
+        <input type="text" id="username" placeholder="Username (e.g. u/YourName)">
+        <button id="authBtn" onclick="verifyUser()">Verify Account</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // --- روابطك الخاصة ---
+        const RENDER_API = "https://karma-588r.onrender.com"; 
+        const APPS_SCRIPT_URL = "رابط_جوجل_سكربت_الخاص_بك"; 
+
+        async function verifyUser() {
+            const userField = document.getElementById('username');
+            const btn = document.getElementById('authBtn');
+            const status = document.getElementById('status');
+            const username = userField.value.trim().replace('u/', '');
+
+            if (!username) return;
+
+            btn.disabled = true;
+            status.innerHTML = "Accessing Reddit Data...";
+            status.className = "";
+
+            try {
+                const response = await fetch(`${RENDER_API}/check/${username}`);
+                const data = await response.json();
+
+                if (data.valid) {
+                    const ageDays = Math.floor((Date.now() / 1000 - data.created_utc) / 86400);
+                    
+                    if (data.total_karma >= 200 && ageDays >= 240) {
+                        status.innerHTML = "✅ SUCCESS: ACCESS GRANTED";
+                        status.className = "success";
+                        setTimeout(() => window.location.href = APPS_SCRIPT_URL, 1500);
+                    } else {
+                        status.innerHTML = `❌ FAILURE: KARMA(${data.total_karma}) OR AGE(${ageDays}d) LOW`;
+                        status.className = "error";
+                        btn.disabled = false;
+                    }
+                } else {
+                    status.innerHTML = "❌ USER NOT FOUND";
+                    status.className = "error";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                status.innerHTML = "❌ SERVER CONNECTION FAILED";
+                status.className = "error";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
