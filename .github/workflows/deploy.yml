@@ -1,0 +1,42 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        # add a test script to package.json if you have one
+        run: npm test || echo "no tests defined"
+
+      - name: (Optional) Build
+        # if you have a build step, uncomment the next line
+        run: |
+          # npm run build
+          echo "no build step configured"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          # if you have a build output directory, change publish_dir accordingly, e.g. 'build'
+
