@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>REDDIT VERIFICATION SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #0b0f19; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Rajdhani', sans-serif; }
+        .auth-card { background: #111723; border: 1px solid #48cae444; box-shadow: 0 0 20px rgba(72, 202, 228, 0.2); padding: 40px; border-radius: 5px; width: 450px; text-align: center; }
+        h1 { font-family: 'Orbitron', sans-serif; color: #90e0ef; letter-spacing: 4px; font-size: 24px; margin-bottom: 10px; text-transform: uppercase; }
+        .rules { color: #8b949e; font-size: 14px; margin-bottom: 30px; }
+        input { width: 100%; padding: 15px; background: #0d1117; border: 1px solid #30363d; border-left: 4px solid #48cae4; color: #ffffff; font-size: 16px; box-sizing: border-box; outline: none; margin-bottom: 25px; }
+        .verify-btn { width: 100%; padding: 15px; background: linear-gradient(90deg, #536dfe, #48cae4); border: none; color: #000; font-weight: bold; font-family: 'Orbitron', sans-serif; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        #status-msg { margin-top: 25px; font-weight: bold; font-size: 14px; }
+        .error { color: #ff3b3b; }
+        .success { color: #00ff88; }
+    </style>
+</head>
+<body>
+<div class="auth-card">
+    <h1>REDDIT VERIFICATION</h1>
+    <div class="rules">Karma Required: 200 | Age: 8 Months</div>
+    <input type="text" id="redditUser" placeholder="Enter Username (u/...)">
+    <button id="mainBtn" class="verify-btn" onclick="processAuth()">Verify Account</button>
+    <div id="status-msg"></div>
+</div>
+
+<script>
+    // IMPORTANT: Since both are on Render, we use a relative path
+    const API_BASE = window.location.origin; 
+    // Replace this with your Google Web App URL
+    const NEXT_STEP_URL = "https://script.google.com/macros/s/AKfycbzQw2Str84m1Ebou_xwBoC8257ovsdgIH8UtQBM4rdW5OFIE6XVrCcu5VEBpwnoRKuR/exec"; 
+
+    async function processAuth() {
+        const input = document.getElementById('redditUser');
+        const btn = document.getElementById('mainBtn');
+        const status = document.getElementById('status-msg');
+        const user = input.value.trim().replace('u/', '');
+
+        if (!user) return;
+        btn.disabled = true;
+        status.innerHTML = "INITIALIZING SCAN...";
+
+        try {
+            const response = await fetch(`${API_BASE}/check/${user}`);
+            const data = await response.json();
+
+            if (data.valid) {
+                const ageInDays = Math.floor((Date.now() / 1000 - data.created_utc) / 86400);
+                if (data.total_karma >= 200 && ageInDays >= 240) {
+                    status.innerHTML = "<span class='success'>ACCESS GRANTED. REDIRECTING...</span>";
+                    setTimeout(() => window.location.href = NEXT_STEP_URL, 1500);
+                } else {
+                    status.innerHTML = `<span class='error'>LOW KARMA (${data.total_karma}) OR AGE (${ageInDays}D)</span>`;
+                    btn.disabled = false;
+                }
+            } else {
+                status.innerHTML = "<span class='error'>USER NOT FOUND</span>";
+                btn.disabled = false;
+            }
+        } catch (err) {
+            status.innerHTML = "<span class='error'>CONNECTION FAILURE</span>";
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
+
+
